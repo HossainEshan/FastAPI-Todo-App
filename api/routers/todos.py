@@ -1,21 +1,10 @@
-from api.database.dbconfig import SessionLocal
+from api.database.dbconfig import db_dependency
 from api.database.models import Todos
 from fastapi import Depends, HTTPException, Path, APIRouter
-from sqlalchemy.orm import Session
-from typing import Annotated
 from pydantic import BaseModel, Field
 from starlette import status
 
 router = APIRouter()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[Session, Depends(get_db)]
 
 class TodoRequest(BaseModel):
     title: str = Field(min_length=3)
