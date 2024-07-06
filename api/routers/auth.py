@@ -19,7 +19,7 @@ async def create_user(user: CreateUserRequest):
     new_user_model = Users(
         username = user.username,
         email = user.email,
-        password = user.password,
+        password_hash = user.password,
         role = user.role,
         is_active = True
     )
