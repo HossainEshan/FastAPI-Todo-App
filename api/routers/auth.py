@@ -11,21 +11,29 @@ from starlette import status
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
+
+SECRET_KEY = 'o4v4kj35345h3c4h5vjhv99hgc9gfx43jhbk23jb24v2ruifgbvh'
+ALGORITHM = 'HS256'
+
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated ='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    role: str
+    
 def authenticate_user(username: str, password: str, db):
     user = db.query(Users).filter(Users.username == username).first()
     if not user or not bcrypt_context.verify(password, user.password_hash):
         return False
     return user
-
-SECRET_KEY = 'o4v4kj35345h3c4h5vjhv99hgc9gfx43jhbk23jb24v2ruifgbvh'
-ALGORITHM = 'HS256'
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     encode = {'sub': username, 'id': user_id}
@@ -46,11 +54,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
 
-class CreateUserRequest(BaseModel):
-    username: str
-    email: str
-    password: str
-    role: str
 
 @router.get('/')
 async def get_user():
