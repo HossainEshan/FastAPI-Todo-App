@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from pydantic import BaseModel
 from api.database.models import Users
 from passlib.context import CryptContext
 from api.database.dbconfig import db_dependency
-from jose import jwt
+from jose import JWTError, jwt
 from starlette import status
 
-router = APIRouter()
+router = APIRouter(prefix='/auth', tags=['auth'])
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated ='auto')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
 def authenticate_user(username: str, password: str, db):
     user = db.query(Users).filter(Users.username == username).first()
@@ -34,17 +35,28 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     token = jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
     return Token(access_token=token, token_type='bearer')
 
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get('sub')
+        user_id = payload.get('id')
+        if not username or user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
+        return {'username': username, 'user_id': user_id}
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
+
 class CreateUserRequest(BaseModel):
     username: str
     email: str
     password: str
     role: str
 
-@router.get('/auth')
+@router.get('/')
 async def get_user():
     return {'user': 'authenticated'}
 
-@router.post('/auth')
+@router.post('/')
 async def create_user(db: db_dependency, user: CreateUserRequest):
     new_user_model = Users(
         username = user.username,
