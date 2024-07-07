@@ -48,7 +48,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         if not username or not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
             
-        return {'username': username, 'user_id': user_id}
+        return {'username': username, 'id': user_id}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
         

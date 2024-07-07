@@ -31,7 +31,7 @@ async def read_by_id(db: db_dependency, todo_id: int = Path(gt=0)):
 @router.post('/todos', status_code=status.HTTP_201_CREATED)
 async def create_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest):
     
-    todo_model = Todos(**todo_request.model_dump(), owner_id=user.get('user_id'))
+    todo_model = Todos(**todo_request.model_dump(), owner_id=user.get('id'))
     
     db.add(todo_model)
     db.commit()
