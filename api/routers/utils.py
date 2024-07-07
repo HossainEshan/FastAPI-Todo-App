@@ -46,11 +46,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         username = payload.get('sub')
         user_id = payload.get('id')
         if not username or not user_id:
-            print(username, user_id)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
             
         return {'username': username, 'user_id': user_id}
     except JWTError:
-        print('JWT error')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
         
