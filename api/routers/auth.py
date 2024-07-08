@@ -33,5 +33,5 @@ async def login_for_access_token(db: db_dependency, form_data: Annotated[OAuth2P
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Could not validate user.')
     
-    token = create_access_token(user.username, user.id, timedelta(minutes=20))
+    token = create_access_token(user.username, user.id, user.role, timedelta(minutes=20))
     return token

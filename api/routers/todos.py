@@ -1,14 +1,12 @@
 from api.database.dbconfig import db_dependency
 from api.database.models import Todos
-from fastapi import Depends, HTTPException, Path, APIRouter
+from fastapi import HTTPException, Path, APIRouter
 from pydantic import BaseModel, Field
 from starlette import status
-from typing import Annotated
-from api.routers.utils import get_current_user
+from api.routers.utils import user_dependency
 
 router = APIRouter(prefix='/todos', tags=['todos'])
 
-user_dependency = Annotated[dict, Depends(get_current_user)]
 
 class TodoRequest(BaseModel):
     title: str = Field(min_length=3)

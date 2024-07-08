@@ -32,8 +32,8 @@ def authenticate_user(username: str, password: str, db):
         return False
     return user
 
-def create_access_token(username: str, id: int, expires_delta: timedelta):
-    encode = {'sub': username, 'id': id}
+def create_access_token(username: str, id: int, role: str, expires_delta: timedelta):
+    encode = {'sub': username, 'id': id, 'role': role}
     expire_time = datetime.now() + expires_delta
     encode.update({'exp': expire_time})
     
@@ -45,10 +45,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get('sub')
         id = payload.get('id')
+        role = payload.get('role')
         if not username or not id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
             
-        return {'username': username, 'id': id}
+        return {'username': username, 'id': id, 'role': role}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
         
