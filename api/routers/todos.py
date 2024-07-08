@@ -6,7 +6,7 @@ from starlette import status
 from typing import Annotated
 from api.routers.utils import get_current_user
 
-router = APIRouter()
+router = APIRouter(prefix='/todos', tags=['todos'])
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
@@ -16,19 +16,19 @@ class TodoRequest(BaseModel):
     priority: int = Field(gt=0, lt=6)
     complete: bool
 
-@router.get('/todos', status_code=status.HTTP_200_OK)
-async def read_all(db: db_dependency):
-    return db.query(Todos).all()
+@router.get('/', status_code=status.HTTP_200_OK)
+async def read_all(user: user_dependency, db: db_dependency):
+    return db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
 
-@router.get('/todos/{todo_id}', status_code=status.HTTP_200_OK)
-async def read_by_id(db: db_dependency, todo_id: int = Path(gt=0)):
-    result = db.query(Todos).filter(Todos.id == todo_id).first()
+@router.get('/{todo_id}', status_code=status.HTTP_200_OK)
+async def read_by_id(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+    result = db.query(Todos).filter(Todos.id == todo_id, Todos.owner_id == user.get('id')).first()
     if not result:
         raise HTTPException(status_code=404, detail='Todo not found')
     return result
     
 
-@router.post('/todos', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest):
     
     todo_model = Todos(**todo_request.model_dump(), owner_id=user.get('id'))
@@ -36,9 +36,9 @@ async def create_todo(user: user_dependency, db: db_dependency, todo_request: To
     db.add(todo_model)
     db.commit()
     
-@router.put('/todos/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(db: db_dependency, todo_request: TodoRequest, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+@router.put('/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def update_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest, todo_id: int = Path(gt=0)):
+    todo_model = db.query(Todos).filter(Todos.id == todo_id, Todos.owner_id == user.get('id')).first()
     if not todo_model:
         raise HTTPException(status_code=404, detail='Todo not found')
     
@@ -50,9 +50,9 @@ async def update_todo(db: db_dependency, todo_request: TodoRequest, todo_id: int
     db.add(todo_model)
     db.commit()
     
-@router.delete('/todos/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+@router.delete('/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+    todo_model = db.query(Todos).filter(Todos.id == todo_id, Todos.owner_id == user.get('id')).first()
     if not todo_model:
         raise HTTPException(status_code=404, detail='Todo not found')
     
