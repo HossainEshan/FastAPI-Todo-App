@@ -32,8 +32,8 @@ def authenticate_user(username: str, password: str, db):
         return False
     return user
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta):
-    encode = {'sub': username, 'id': user_id}
+def create_access_token(username: str, id: int, expires_delta: timedelta):
+    encode = {'sub': username, 'id': id}
     expire_time = datetime.now() + expires_delta
     encode.update({'exp': expire_time})
     
@@ -44,11 +44,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get('sub')
-        user_id = payload.get('id')
-        if not username or not user_id:
+        id = payload.get('id')
+        if not username or not id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
             
-        return {'username': username, 'id': user_id}
+        return {'username': username, 'id': id}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not verify user')
         
