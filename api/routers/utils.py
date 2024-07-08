@@ -7,10 +7,15 @@ from api.database.models import Users
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from starlette import status
+import os
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
-SECRET_KEY = 'o4v4kj35345h3c4h5vjhv99hgc9gfx43jhbk23jb24v2ruifgbvh'
-ALGORITHM = 'HS256'
+# Retrieve sensitive data from environment variables
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = os.getenv('ALGORITHM')
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated ='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
